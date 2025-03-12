@@ -1,0 +1,83 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow import keras
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.layers import Dense, Dropout, Conv2D, MaxPool2D, Flatten
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+SIZE = 256
+EPOCHS = 10
+BATCH_SIZE = 32
+input_shape = (SIZE, SIZE, 3)
+loadImageData = ImageDataGenerator(rescale = 1./255)
+
+train_dataset = loadImageData.flow_from_directory(
+        directory = '/content/drive/MyDrive/Colab Notebooks/archive/train',
+        target_size = (SIZE, SIZE),
+        class_mode = 'binary',
+        color_mode="rgb")
+validation_dataset = loadImageData.flow_from_directory(
+        '/content/drive/MyDrive/Colab Notebooks/archive/test',
+        target_size = (SIZE, SIZE),
+        class_mode='binary',
+        color_mode="rgb")
+train_dataset.class_indices
+
+model = Sequential([
+    Conv2D(64, (3, 3), activation="relu", input_shape=input_shape), # input layer and feature extraction using 64 filter
+    MaxPool2D(), # max pooling to reduce dimension
+    Conv2D(32, (3, 3), activation="relu"), # input layer and feature extraction using 32 filter
+    MaxPool2D(), # max pooling to reduce dimension
+    Conv2D(16, (3, 3), activation="relu"), # input layer and feature extraction using 16 filter
+    MaxPool2D(), # max pooling to reduce dimension
+    Flatten(), # convert the 2D vector into 1D vector
+    Dropout(0.2), # to prevent overfitting
+    Dense(512, activation="relu"), # reduce dimension and find pattern
+    Dense(32, activation="relu"), # reduce dimension and find pattern
+    Dense(1, activation="sigmoid") # output in binary
+])
+model.compile(
+    optimizer="adam",
+    loss="binary_crossentropy",
+    metrics=['accuracy']
+)
+history = model.fit(
+    train_dataset,
+    epochs=EPOCHS,
+    verbose=1,
+    validation_data=validation_dataset
+)
+acc = history.history['accuracy']
+val_acc = history.history['val_accuracy']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+trained_epoch = len(acc)
+fig = plt.figure(figsize=(22, 10))
+plt.subplot(1, 2, 1)
+plt.plot(range(trained_epoch), acc, label='Training Accuracy')
+plt.plot(range(trained_epoch), val_acc, label='Validation Accuracy')
+plt.legend(loc='lower right')
+plt.title('Training and Validation Accuracy')
+plt.subplot(1, 2, 2)
+plt.plot(range(trained_epoch), loss, label='Training Loss')
+plt.plot(range(trained_epoch), val_loss, label='Validation Loss')
+plt.legend(loc='upper right')
+plt.title('Training and Validation Loss')
+plt.show()
+
+def dog_or_cat(imgpath):
+    img = image.load_img(imgpath, target_size=(SIZE, SIZE))
+    plt.imshow(img)
+
+    Y = image.img_to_array(img)
+    X = np.expand_dims(Y, axis=0)
+    pred_class = int(model.predict(X)[0][0])
+    if(pred_class == 0):
+        return "cat"
+    return "dog"
+dog_or_cat("/content/drive/MyDrive/Colab Notebooks/archive/test/cats/cat_422.jpg")
+dog_or_cat("/content/drive/MyDrive/Colab Notebooks/archive/test/dogs/dog_130.jpg")

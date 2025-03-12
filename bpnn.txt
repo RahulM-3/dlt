@@ -1,0 +1,63 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models, Input
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load the MNIST dataset
+(train_images, train_labels), (test_images, test_labels) = tf.keras.datasets.mnist.load_data()
+
+# Normalize the images to a range of [0, 1]
+train_images, test_images = train_images / 255.0, test_images / 255.0
+
+# Create the Neural Network Model
+model = models.Sequential([
+    Input(shape=(28, 28)), # Explicitly define the input shape
+    layers.Flatten(), # Flatten the 28x28 image
+    layers.Dense(128, activation='relu'), # Hidden layer with 128 neurons
+    layers.Dense(10, activation='softmax') # Output layer for 10 classes (digits 0-9)
+])
+
+# Compile the model with an Adam optimizer, sparse categorical cross-entropy loss, and accuracy metrics
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Train the model
+history = model.fit(train_images, train_labels, epochs=5, validation_split=0.2)
+
+# Evaluate the model's performance on the test set
+test_loss, test_acc = model.evaluate(test_images, test_labels)
+print(f"Test accuracy: {test_acc}")
+
+# Plotting the loss over epochs with color-blind friendly colors
+plt.plot(history.history['loss'], color='tab:blue') # Use color-blind friendly color
+
+# Add title and labels with larger font sizes for accessibility
+plt.title('Loss over Epochs', fontsize=14)
+plt.xlabel('Epochs', fontsize=12)
+plt.ylabel('Loss', fontsize=12)
+
+# Add a grid for better readability
+plt.grid(True)
+
+# Save the loss plot as a .png file with high resolution
+plt.savefig('loss.png', dpi=300)
+
+# Show the plot
+plt.show()
+
+# Display the test image and its predicted label
+plt.imshow(test_images[0], cmap=plt.cm.binary) # Grayscale image, binary colormap
+
+# Add title with high contrast for accessibility
+predicted_label = model.predict(test_images[0:1]).argmax()
+plt.title(f"Predicted label: {predicted_label}", fontsize=14, color='black') # Black title for contrast
+
+# Add grid for better readability (optional)
+plt.grid(False) # We may not want a grid on image plots
+
+# Save the image with the prediction title
+plt.savefig('predicted_image.png', dpi=300) # Save as PNG with high resolution
+
+# Show the plot
+plt.show()

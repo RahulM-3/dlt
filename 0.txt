@@ -1,0 +1,12 @@
+ffnn.txt - Feed-Forward Neural Network
+ffnnd.csv - Feed-Forward Neural Network dataset
+bpnn.txt - Back Propagation Neural Network
+cnn.txt - Convolutional Neural Network
+ic.txt - Image Classification
+is.txt - Image Segmentation
+ig.txt - Image Generation
+tsf.txt - Time Series Forecasting
+tsfd.csv - Time Series Forecasting dataset
+tc.txt - Text Classification
+tg.txt - Text Generation
+mt.txt - Machine Translation

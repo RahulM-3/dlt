@@ -1,0 +1,10 @@
+from transformers import pipeline
+
+# Load text generation pipeline
+generator = pipeline("text-generation", model="gpt2")
+
+# Generate text
+prompt = input("Enter a prompt to generate text: ")
+output = generator(prompt, max_length=400, num_return_sequences=1)
+
+print("\nGenerated text: \n", output[0]["generated_text"])

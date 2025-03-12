@@ -1,0 +1,68 @@
+!pip install ipywidgets transformers torch
+import ipywidgets as widgets
+from transformers import MarianMTModel, MarianTokenizer
+from IPython.display import display
+
+# Load pre-trained models and tokenizers for English to Spanish and German.
+model_names = {
+    "spanish": "Helsinki-NLP/opus-mt-en-es",
+    "german": "Helsinki-NLP/opus-mt-en-de",
+}
+
+models = {lang: MarianMTModel.from_pretrained(model_name) for lang, model_name in model_names.items()}
+tokenizers = {lang: MarianTokenizer.from_pretrained(model_name) for lang, model_name in model_names.items()}
+
+# Function to translate text from English to the target language
+def translate_to_language(text, target_language):
+    model = models[target_language]
+    tokenizer = tokenizers[target_language]
+
+    # Tokenize the input text
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+
+    # Perform translation
+    translated = model.generate(**inputs)
+
+    # Decode the translated text back into human-readable form
+    translated_text = tokenizer.decode(translated[0], skip_special_tokens=True)
+
+    return translated_text
+
+# Create widgets
+text_input = widgets.Textarea(
+    value='',
+    placeholder='Enter text in English',
+    description='Text:',
+    disabled=False,
+    layout=widgets.Layout(width='50%', height='50px')
+)
+
+language_choice = widgets.Dropdown(
+    options=['Spanish', 'German'],
+    value='Spanish',
+    description='Language:',
+    disabled=False
+)
+
+output_label = widgets.Label(value="Translated Text will appear here.")
+
+# Function to handle translation when button is clicked
+def on_translate_button_click(b):
+    english_text = text_input.value  # Get text from the textarea
+    target_language = language_choice.value  # Get selected language
+
+    # Translate the text
+    if target_language == "Spanish":
+        translated_text = translate_to_language(english_text, "spanish")
+    elif target_language == "German":
+        translated_text = translate_to_language(english_text, "german")
+
+    # Update the output label with the translated text
+    output_label.value = f"Translated Text: {translated_text}"
+
+# Button to trigger translation
+translate_button = widgets.Button(description="Translate")
+translate_button.on_click(on_translate_button_click)
+
+# Display the widgets in Colab
+display(text_input, language_choice, translate_button, output_label)

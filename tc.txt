@@ -1,0 +1,31 @@
+from transformers import pipeline
+
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+sentiment_model = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
+
+def classify_text(text):
+    candidate_labels = [
+        "Technology", "Sports", "Health", "Entertainment", 
+        "Business", "Politics", "Education", "Environment",
+        "Travel", "Science", "Art", "Fashion", "History", 
+        "Food", "Lifestyle", "Economy"
+    ]
+    result = classifier(text, candidate_labels)
+    label = result['labels'][0]
+    score = result['scores'][0]
+    return label, score
+
+def analyze_sentiment(text):
+    result = sentiment_model(text)
+    return result
+
+def analyze_sentence(input_sentence):
+    classification_label, classification_score = classify_text(input_sentence)
+    sentiment_result = analyze_sentiment(input_sentence)
+    
+    print(f"Input Sentence: {input_sentence}")
+    print(f"Text Classification: {classification_label} (Confidence: {classification_score:.2f})")
+    print(f"Sentiment: {sentiment_result[0]['label']} (Confidence: {sentiment_result[0]['score']:.2f})")
+
+input_sentence = input("Enter a sentence: ")
+analyze_sentence(input_sentence)

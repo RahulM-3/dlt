@@ -1,0 +1,87 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+
+data = pd.read_csv('/content/tata.csv')
+
+# Select relevant columns
+X = data[['Open', 'High', 'Low', 'Volume']].values
+y = data['Close'].values
+
+# Normalize the data
+scalerX = MinMaxScaler()
+scalerY = MinMaxScaler()
+
+X_scaled = scalerX.fit_transform(X)
+y_scaled = scalerY.fit_transform(y.reshape(-1, 1))
+
+print("Normalized Features:")
+print(X_scaled)
+print("\nNormalized Target:")
+print(y_scaled)
+
+# Split into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y_scaled, test_size=0.2, random_state=42)
+
+
+
+
+model = Sequential([
+    Dense(64, input_dim=X_train.shape[1], activation='relu'),
+    Dense(32, activation='relu'),
+    Dense(1, activation='linear')
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+
+# Print model summary
+model.summary()
+
+
+
+
+history = model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2, verbose=1)
+
+
+
+
+loss, mae = model.evaluate(X_test, y_test, verbose=0)
+print(f"Mean Absolute Error: {mae:.4f}")
+
+# Plot training history
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.legend()
+plt.title('Model Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.show()
+
+
+
+
+predictions = model.predict(X_test)
+
+# Reverse scaling for predictions and true values
+y_test_original = scalerY.inverse_transform(y_test)
+predictions_original = scalerY.inverse_transform(predictions)
+
+# Plot predictions vs true values
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test_original, predictions_original, color='blue', label='Predicted vs Actual')
+plt.title('Predicted vs Actual Close Prices')
+plt.xlabel('Actual Close Price')
+plt.ylabel('Predicted Close Price')
+plt.gca().xaxis.set_major_locator(ticker.MultipleLocator(20))
+plt.gca().yaxis.set_major_locator(ticker.MultipleLocator(20))
+plt.grid(True)
+plt.legend()
+plt.show()

@@ -1,0 +1,81 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage import io, color, filters, feature
+from sklearn.cluster import KMeans
+from tensorflow.keras.preprocessing import image
+
+# Function to load and preprocess the image
+def preprocess_image(img_path, target_size=(512, 512)):
+    img = image.load_img(img_path, target_size=target_size)
+    img_array = image.img_to_array(img)
+    return img_array
+
+# Thresholding Segmentation
+def threshold_segmentation(img_array, threshold_value=0.5):
+    gray_image = color.rgb2gray(img_array)
+    binary_image = gray_image > threshold_value
+    return binary_image
+
+# Edge Detection using Sobel operator
+def edge_detection(img_array):
+    gray_image = color.rgb2gray(img_array)
+    edges = filters.sobel(gray_image)
+    return edges
+
+# K-means Clustering for segmentation
+def kmeans_segmentation(img_array, k=2):
+    # Flatten the image to 2D for clustering
+    img_reshaped = img_array.reshape(-1, 3)
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(img_reshaped)
+
+    # Get the labels for each pixel (either cluster 0 or 1)
+    segmented_img = kmeans.labels_.reshape(img_array.shape[0], img_array.shape[1])
+    return segmented_img
+
+# Function to visualize the original image and results
+def perform_combined_segmentation(img_path, threshold_value=0.5, k=2):
+    # Load and preprocess the image
+    img_array = preprocess_image(img_path)
+
+    # Thresholding-based segmentation
+    threshold_mask = threshold_segmentation(img_array, threshold_value)
+
+    # Edge detection result
+    edges = edge_detection(img_array)
+
+    # K-means based segmentation
+    kmeans_result = kmeans_segmentation(img_array, k)
+
+    # Plotting the original image and segmentation results
+    plt.figure(figsize=(18, 6))
+
+    # Original Image
+    plt.subplot(1, 4, 1)
+    plt.imshow(img_array.astype('uint8'))
+    plt.title("Original Image")
+    plt.axis('on')
+
+    # Thresholded Image
+    plt.subplot(1, 4, 2)
+    plt.imshow(threshold_mask, cmap='gray')
+    plt.title(f"Thresholding Segmentation")
+    plt.axis('on')
+
+    # Edge Detection Image
+    plt.subplot(1, 4, 3)
+    plt.imshow(edges, cmap='gray')
+    plt.title("Edge Detection")
+    plt.axis('on')
+
+    # K-means Clustering Segmentation
+    plt.subplot(1, 4, 4)
+    plt.imshow(kmeans_result, cmap='jet')
+    plt.title(f"K-means Segmentation (k={k})")
+    plt.axis('on')
+
+    plt.show()
+
+# Example usage (replace with the actual image path)
+img_path = '/content/ho.jfif'  # Replace with your image path
+perform_combined_segmentation(img_path, threshold_value=40, k=2)  # You can adjust the threshold value and k for K-means
